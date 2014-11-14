@@ -24,7 +24,4 @@ AES Crypter receives a user-designated program and outputs an encryption version
 
 **Junior Hacker: Taegan Warren
 (taeganwarren25@hotmail.com)**
-<<<<<<< HEAD
-=======
 
->>>>>>> FETCH_HEAD
