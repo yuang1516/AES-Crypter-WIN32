@@ -26,3 +26,10 @@ AES Crypter receives a user-designated program and outputs an encryption version
 **Junior Hacker: Taegan Warren
 (taeganwarren25@hotmail.com)**
 
+### References for Frameworks/Information used in project
+
+[Windows Portable Executable Format: In-depth](http://msdn.microsoft.com/en-us/magazine/cc301805.aspx)
+
+[Win32 API](http://msdn.microsoft.com/en-us/library/windows/desktop/ff818516(v=vs.85).aspx)
+
+[C/C++ Reference] (http://en.cppreference.com/w/)
