@@ -95,17 +95,17 @@ void BuildEncryptedVers (struct StubData * sData)
 		error("Error - Could not write to file");
 	}
 
- 
+    // Discard the original file
 	CloseHandle(hFile);
 	free(pBuffer);
 
-    
-	hUpdate = BeginUpdateResource("crypted.exe", FALSE);
+    // Resources -> Where the data is stored
+	hUpdate = BeginUpdateResource("crypted.exe", FALSE); // Updating the encrypted file's contents
 	if(UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(10), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pFileBuffer, sData->FileSize) == 0){
 		error("Error - Could not update resource");
 	}
 
-    if (UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(20), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pKey, sData->KeySize)==0)
+    if (UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(20), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pKey, sData->KeySize)==0) // Updating the file's key -> key same for both encryption and decryption
     {
   		error("Error - Could not update resource");
     }
