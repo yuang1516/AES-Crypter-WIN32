@@ -1,3 +1,5 @@
+#include "cryptersrc.h"
+
 // Allocating the file to encrypt
 
 // Data sent to the stub
