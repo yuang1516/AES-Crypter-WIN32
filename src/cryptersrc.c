@@ -3,7 +3,7 @@
 // Data sent to the stub
 struct StubData
 {
-	unsigned char * pFileBuffer; 
+	unsigned char * pFileBuffer;
 	unsigned long FileSize; 
 	unsigned char * pKey;
 	unsigned long KeySize;
@@ -57,10 +57,7 @@ void AESEncrypt(struct StubData * sData)
 			j=0;
 	}
 }
-void AESDecrypt(struct StubData * sData)
-{
 
-}
 void BuildEncryptedVers (struct StubData * sData)
 {
 	HRSRC hResource; 
@@ -98,9 +95,11 @@ void BuildEncryptedVers (struct StubData * sData)
 		error("Error - Could not write to file");
 	}
 
+ 
 	CloseHandle(hFile);
 	free(pBuffer);
 
+    
 	hUpdate = BeginUpdateResource("crypted.exe", FALSE);
 	if(UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(10), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pFileBuffer, sData->FileSize) == 0){
 		error("Error - Could not update resource");
