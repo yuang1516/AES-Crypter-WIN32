@@ -23,8 +23,6 @@ AES Crypter receives a user-designated program and outputs an encryption version
 ### Credits:
 **Project Lead/Lead Hacker: Derek Ta (dta858king@gmail.com)**
 
-**Junior Hacker: Taegan Warren
-(taeganwarren25@hotmail.com)**
 
 ### References for Frameworks/Information used in project
 
